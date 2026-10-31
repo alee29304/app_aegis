@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>AEGIS · Crear perfil</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body class="profile-page">
+  <div class="profile-glow glow-one"></div>
+  <div class="profile-glow glow-two"></div>
+
+  <main class="profile-card">
+    <div class="profile-brand">
+      <div class="brand-mark">A</div>
+      <div>
+        <div class="brand">AEGIS</div>
+        <div class="brand-subtitle">Seguridad creada por la comunidad</div>
+      </div>
+    </div>
+
+    <div class="profile-intro">
+      <span class="pill">TU IDENTIDAD, A TU MANERA</span>
+      <h1>Construye tu perfil</h1>
+      <p>Elige cómo quieres aparecer dentro de la comunidad AEGIS.</p>
+    </div>
+
+    {% if error %}
+      <div class="error">{{ error }}</div>
+    {% endif %}
+
+    <form method="post" enctype="multipart/form-data" class="profile-form">
+      <label>Apodo
+        <input name="nickname" maxlength="24" required placeholder="Ej: Luna_23">
+      </label>
+
+      <label>Nombre real <span>· opcional</span>
+        <input name="real_name" maxlength="80" placeholder="Puedes dejarlo vacío">
+      </label>
+
+      <label class="file-label">Foto de perfil <span>· opcional</span>
+        <div class="avatar-upload">
+          <img id="previewAvatar" src="{{ url_for('static', filename='default-avatar.svg') }}" alt="Avatar AEGIS">
+          <div>
+            <strong>Usa una foto o el avatar AEGIS</strong>
+            <small>Si no eliges una foto, usaremos automáticamente el avatar oficial de AEGIS.</small>
+            <input id="photoInput" type="file" name="photo" accept="image/png,image/jpeg,image/webp">
+          </div>
+        </div>
+      </label>
+
+      <button class="primary profile-submit" type="submit">
+        Entrar a AEGIS <span>→</span>
+      </button>
+    </form>
+
+    <div class="profile-footer">
+      <div class="level-preview">
+        <span>Rangos</span>
+        <b>Novata</b><i>→</i><b>Vigía</b><i>→</i><b>Guardiana</b><i>→</i><b>AEGIS</b>
+      </div>
+      <small>Tu rango aumenta automáticamente con tu participación.</small>
+    </div>
+  </main>
+
+  <script>
+    const input = document.getElementById("photoInput");
+    const preview = document.getElementById("previewAvatar");
+    input.addEventListener("change", () => {
+      const file = input.files[0];
+      if (!file) {
+        preview.src = "{{ url_for('static', filename='default-avatar.svg') }}";
+        return;
+      }
+      preview.src = URL.createObjectURL(file);
+    });
+  </script>
+</body>
+</html>

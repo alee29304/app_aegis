@@ -1,0 +1,153 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>AEGIS · San Ramón</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <header class="topbar">
+    <div class="top-left">
+      <div class="brand">AEGIS</div>
+      <div class="location-chip"><span class="location-dot"></span> San Ramón</div>
+    </div>
+
+    <nav class="top-nav">
+      <button class="nav-item active" id="mapNav">Mapa</button>
+      <button class="nav-item" id="myLevelNav">Mi nivel <strong>{{ my_level }}</strong></button>
+      <button class="nav-item" id="howNav">¿Cómo funciona?</button>
+    </nav>
+
+    <div class="header-actions">
+      <button id="profileBtn" class="profile-mini" title="Abrir mi perfil">
+        <img src="{{ url_for('static', filename='uploads/' + me.photo) if me.photo else url_for('static', filename='default-avatar.svg') }}" alt="">
+        <span><b>{{ me.nickname }}</b><small>{{ my_level }}</small></span>
+        <span class="chevron">⌄</span>
+      </button>
+    </div>
+  </header>
+
+  <main class="app">
+    <section id="map"></section>
+
+    <div class="map-help">
+      <div class="help-icon">!</div>
+      <div>
+        <b>¿Viste algo riesgoso?</b>
+        <span>Haz clic en el mapa para colocar un pin.</span>
+      </div>
+    </div>
+
+    <div class="map-legend">
+      <span class="legend-dot"></span>
+      <span>Zona reportada por la comunidad</span>
+    </div>
+
+    <aside id="reportPanel" class="panel hidden">
+      <button class="close" data-close="reportPanel">×</button>
+      <div class="panel-kicker">NUEVO AVISO</div>
+      <h2>¿Qué ocurrió aquí?</h2>
+      <p class="muted" id="coordsText"></p>
+      <textarea id="reportText" maxlength="500" placeholder="Cuenta brevemente qué pasó..."></textarea>
+      <button id="saveReport" class="primary">Publicar reporte</button>
+    </aside>
+
+    <aside id="commentsPanel" class="comments-panel hidden">
+      <div class="comments-head">
+        <div>
+          <div class="eyebrow">REPORTE DE LA COMUNIDAD</div>
+          <h2 id="reportTitle"></h2>
+        </div>
+        <button class="close" data-close="commentsPanel">×</button>
+      </div>
+      <div id="commentsList" class="comments-list"></div>
+      <div id="replyInfo" class="reply-info hidden"></div>
+      <div class="comment-compose">
+        <textarea id="commentText" maxlength="1000" placeholder="Escribe lo que viviste aquí..."></textarea>
+        <div class="compose-row">
+          <button id="cancelReply" class="ghost hidden">Cancelar respuesta</button>
+          <button id="sendComment" class="primary">Comentar</button>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Perfil -->
+    <div id="profileOverlay" class="overlay hidden"></div>
+    <aside id="profileDrawer" class="profile-drawer hidden">
+      <button class="close drawer-close" id="closeProfile">×</button>
+
+      <div class="drawer-cover">
+        <div class="drawer-avatar-wrap">
+          <img id="drawerAvatar" src="{{ url_for('static', filename='uploads/' + me.photo) if me.photo else url_for('static', filename='default-avatar.svg') }}" alt="">
+          <label class="change-photo" title="Cambiar foto">
+            ✎
+            <input id="drawerPhoto" type="file" accept="image/png,image/jpeg,image/webp">
+          </label>
+        </div>
+      </div>
+
+      <div class="drawer-content">
+        <div class="drawer-title-row">
+          <div>
+            <div class="eyebrow">MI PERFIL</div>
+            <h2 id="drawerNickname">{{ me.nickname }}</h2>
+          </div>
+          <div class="big-level" id="drawerLevel">{{ my_level }}</div>
+        </div>
+
+        <p class="muted">Personaliza cómo apareces ante la comunidad.</p>
+
+        <label>Apodo
+          <input id="editNickname" maxlength="24" value="{{ me.nickname }}">
+        </label>
+
+        <label>Nombre real <span>· opcional</span>
+          <input id="editRealName" maxlength="80" value="{{ me.real_name }}">
+        </label>
+
+        <div class="range-box">
+          <div class="range-title">
+            <span>Rango alcanzado</span>
+            <b id="rangeStatus">{{ my_level }}</b>
+          </div>
+          <div class="range-track">
+            <span class="range-fill" id="rangeFill"></span>
+          </div>
+          <div class="range-labels">
+            <span>Novata</span><span>Vigía</span><span>Guardiana</span><span>AEGIS</span>
+          </div>
+          <small>Solo puedes mostrar un rango que ya hayas alcanzado. Tu rango real sigue dependiendo de tu actividad.</small>
+          <select id="displayLevel"></select>
+        </div>
+
+        <button id="saveProfile" class="primary">Guardar cambios</button>
+        <button id="logoutBtn" class="drawer-logout">Cerrar sesión</button>
+      </div>
+    </aside>
+
+    <div id="infoModal" class="info-modal hidden">
+      <button class="close" id="closeInfo">×</button>
+      <div class="eyebrow">AEGIS</div>
+      <h2>¿Cómo funciona?</h2>
+      <p>AEGIS es un mapa colaborativo donde la comunidad comparte experiencias de riesgo y puede conversar sobre cada lugar.</p>
+      <div class="info-row"><b>1</b><span>Encuentra una zona en San Ramón.</span></div>
+      <div class="info-row"><b>2</b><span>Publica un reporte colocando un pin.</span></div>
+      <div class="info-row"><b>3</b><span>Lee experiencias y responde en los hilos.</span></div>
+    </div>
+
+    <div id="toast" class="toast"></div>
+  </main>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script>
+    window.AEGIS = {
+      myId: {{ me.id }},
+      myNickname: {{ me.nickname|tojson }},
+      myLevel: {{ my_level|tojson }}
+    };
+  </script>
+  <script src="{{ url_for('static', filename='app.js') }}"></script>
+</body>
+</html>
